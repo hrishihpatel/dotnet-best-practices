@@ -381,6 +381,95 @@ public static bool IsNullOrEmpty(string value) {
     return (value == null || value.Length == 0);
 }
 ```
+
+# Optimize Syntax
+In this section, we will look at some of the basic things that you should utalize to make your code much cleaner.
+
+#### 1. User of ExpressionBody
+
+```csharp
+//Avoid  
+public ActionResult Dashboard()  
+{  
+    return View();  
+}  
+//Do  
+public ActionResult Dashboard() => View();
+```
+
+#### 2. null or empty conditions
+
+```csharp
+
+//Avoid  
+var varName = "faisal";  
+if (varName != null && varName != "")  
+{  
+   //code  
+}  
+//Do  
+var varName = "faisal";  
+if (!string.IsNullOrEmpty(varName))  
+{  
+    //code  
+}
+```
+#### 3. null coalescing expression
+
+```csharp
+Test test = new Test();  
+//Avoid  
+var varName = test.Name != null ? test.Name : "";  
+//Do  
+var varName = test.Name ?? "";
+```
+
+#### 4. object initializer
+
+```csharp
+//Avoid  
+Test test = new Test();  
+test.Id = 1;  
+test.Name = "faisal";  
+//Do  
+var test = new Test  
+{  
+   Id = 1,  
+   Name = "faisal"  
+};
+```
+#### 5. use the ?. operator:
+
+```csharp
+//Avoid  
+var empName = "";  
+Session["Name"] = "Faisal Pathan";  
+if (Session["Name"] != null)  
+{  
+   empName = Session["Name"].ToString();  
+}  
+else  
+{  
+     empName = "";  
+}  
+//Do  
+var empName = "";  
+Session["Name"] = "Faisal Pathan";  
+empName = Session["Name"]?.ToString() ?? "";
+```
+
+#### 6. string interpolation
+
+```csharp
+Test test = new Test();  
+//Avoid  
+ var details = string.Format("{0}, you are welcome, Your Id is {1}", test.Name , test.Id + "_emp");  
+//Do  
+var details = $"{test.Name}, you are welcome, Your Id is {test.Id}_emp";
+```
+
+
+
 ## Offical Reference
 
 1. [MSDN General Naming Conventions](http://msdn.microsoft.com/en-us/library/ms229045(v=vs.110).aspx)
