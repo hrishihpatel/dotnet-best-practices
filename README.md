@@ -475,6 +475,294 @@ The main benefits one can gain from using asynchronous programming are improved 
 
 The .NET Framework provides a few avenues to get on the ramp to asynchronous programming. Some of your implementation choices from the most basic to complex include using background workers, invoking a method asynchronously from a delegate, or implementing the IAsynchResult interface. All of these options allow you to multi-thread your application without ever having to manage your own threads. The .NET Framework asynchronous APIs handle this drudgery for you.
 
+# Variables
+
+#### 1. Avoid nesting too deeply and return early
+Too many if else statements can make the code hard to follow. **Explicit is better than implicit**.
+
+**Bad:**
+
+```csharp
+public bool IsShopOpen(string day)
+{
+    if (!string.IsNullOrEmpty(day))
+    {
+        day = day.ToLower();
+        if (day == "friday")
+        {
+            return true;
+        }
+        else if (day == "saturday")
+        {
+            return true;
+        }
+        else if (day == "sunday")
+        {
+            return true;
+        }
+        else
+        {
+            return false;
+        }
+    }
+    else
+    {
+        return false;
+    }
+
+}
+```
+
+**Good:**
+
+```csharp
+public bool IsShopOpen(string day)
+{
+    if (string.IsNullOrEmpty(day))
+    {
+        return false;
+    }
+
+    var openingDays = new[] { "friday", "saturday", "sunday" };
+    return openingDays.Any(d => d == day.ToLower());
+}
+```
+#### 2. Avoid mental mapping
+Don’t force the reader of your code to translate what the variable means. **Explicit is better than implicit**.
+
+**Bad:**
+
+```csharp
+var l = new[] { "Austin", "New York", "San Francisco" };
+
+for (var i = 0; i < l.Count(); i++)
+{
+    var li = l[i];
+    DoStuff();
+    DoSomeOtherStuff();
+
+    // ...
+    // ...
+    // ...
+    // Wait, what is `li` for again?
+    Dispatch(li);
+}
+```
+
+**Good:**
+
+```csharp
+var locations = new[] { "Austin", "New York", "San Francisco" };
+
+foreach (var location in locations)
+{
+    DoStuff();
+    DoSomeOtherStuff();
+
+    // ...
+    // ...
+    // ...
+    Dispatch(location);
+}
+```
+
+#### 3. Avoid magic string
+Magic strings are string values that are specified directly within application code that have an impact on the application’s behavior. Frequently, such strings will end up being duplicated within the system, and since they cannot automatically be updated using refactoring tools, they become a common source of bugs when changes are made to some strings but not others.
+
+**Bad**
+
+```csharp
+if (userRole == "Admin")
+{
+    // logic in here
+}
+```
+
+**Good**
+
+```csharp
+const string ADMIN_ROLE = "Admin"
+if (userRole == ADMIN_ROLE)
+{
+    // logic in here
+}
+```
+
+Using this we only have to change in centralize place and others will adapt it.
+
+#### 4. Don't add unneeded context
+If your class/object name tells you something, don't repeat that in your variable name.
+
+**Bad:**
+
+```csharp
+public class Car
+{
+    public string CarMake { get; set; }
+    public string CarModel { get; set; }
+    public string CarColor { get; set; }
+
+    //...
+}
+```
+
+**Good:**
+
+```csharp
+public class Car
+{
+    public string Make { get; set; }
+    public string Model { get; set; }
+    public string Color { get; set; }
+
+    //...
+}
+```
+
+# Classes
+
+#### 1. Use method chaining
+This pattern is very useful and commonly used in many libraries. It allows your code to be expressive, and less verbose.
+For that reason, use method chaining and take a look at how clean your code will be.
+
+**Good:**
+
+```csharp
+public static class ListExtensions
+{
+    public static List<T> FluentAdd<T>(this List<T> list, T item)
+    {
+        list.Add(item);
+        return list;
+    }
+
+    public static List<T> FluentClear<T>(this List<T> list)
+    {
+        list.Clear();
+        return list;
+    }
+
+    public static List<T> FluentForEach<T>(this List<T> list, Action<T> action)
+    {
+        list.ForEach(action);
+        return list;
+    }
+
+    public static List<T> FluentInsert<T>(this List<T> list, int index, T item)
+    {
+        list.Insert(index, item);
+        return list;
+    }
+
+    public static List<T> FluentRemoveAt<T>(this List<T> list, int index)
+    {
+        list.RemoveAt(index);
+        return list;
+    }
+
+    public static List<T> FluentReverse<T>(this List<T> list)
+    {
+        list.Reverse();
+        return list;
+    }
+}
+
+internal static void ListFluentExtensions()
+{
+    var list = new List<int>() { 1, 2, 3, 4, 5 }
+        .FluentAdd(1)
+        .FluentInsert(0, 0)
+        .FluentRemoveAt(1)
+        .FluentReverse()
+        .FluentForEach(value => value.WriteLine())
+        .FluentClear();
+}
+```
+
+#### 2. Prefer composition over inheritance
+As stated famously in [_Design Patterns_](https://en.wikipedia.org/wiki/Design_Patterns) by the Gang of Four,
+you should prefer composition over inheritance where you can. There are lots of good reasons to use inheritance and lots of good reasons to use composition.
+
+The main point for this maxim is that if your mind instinctively goes for inheritance, try to think if composition could model your problem better. In some cases it can.
+
+You might be wondering then, "when should I use inheritance?" It
+depends on your problem at hand, but this is a decent list of when inheritance makes more sense than composition:
+
+1. Your inheritance represents an "is-a" relationship and not a "has-a" relationship (Human->Animal vs. User->UserDetails).
+2. You can reuse code from the base classes (Humans can move like all animals).
+3. You want to make global changes to derived classes by changing a base class (Change the caloric expenditure of all animals when they move).
+
+**Bad:**
+
+```csharp
+class Employee
+{
+    private string Name { get; set; }
+    private string Email { get; set; }
+
+    public Employee(string name, string email)
+    {
+        Name = name;
+        Email = email;
+    }
+
+    // ...
+}
+
+// Bad because Employees "have" tax data.
+// EmployeeTaxData is not a type of Employee
+
+class EmployeeTaxData : Employee
+{
+    private string Name { get; }
+    private string Email { get; }
+
+    public EmployeeTaxData(string name, string email, string ssn, string salary)
+    {
+         // ...
+    }
+
+    // ...
+}
+```
+
+**Good:**
+
+```csharp
+class EmployeeTaxData
+{
+    public string Ssn { get; }
+    public string Salary { get; }
+
+    public EmployeeTaxData(string ssn, string salary)
+    {
+        Ssn = ssn;
+        Salary = salary;
+    }
+
+    // ...
+}
+
+class Employee
+{
+    public string Name { get; }
+    public string Email { get; }
+    public EmployeeTaxData TaxData { get; }
+
+    public Employee(string name, string email)
+    {
+        Name = name;
+        Email = email;
+    }
+
+    public void SetTax(string ssn, double salary)
+    {
+        TaxData = new EmployeeTaxData(ssn, salary);
+    }
+
+    // ...
+}
+```
 
 
 ## Offical Reference
