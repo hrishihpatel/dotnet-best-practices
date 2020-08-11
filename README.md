@@ -468,6 +468,13 @@ Test test = new Test();
 var details = $"{test.Name}, you are welcome, Your Id is {test.Id}_emp";
 ```
 
+# Async AWait
+Asynchronous programming is a means of parallel programming in which a unit of work runs separately from the main application thread and notifies the calling thread of its completion, failure or progress…
+
+The main benefits one can gain from using asynchronous programming are improved application performance and responsiveness. One particularly well suited application for the asynchronous pattern is providing a responsive UI in a client application while running a computationally or resource expensive operation.
+
+The .NET Framework provides a few avenues to get on the ramp to asynchronous programming. Some of your implementation choices from the most basic to complex include using background workers, invoking a method asynchronously from a delegate, or implementing the IAsynchResult interface. All of these options allow you to multi-thread your application without ever having to manage your own threads. The .NET Framework asynchronous APIs handle this drudgery for you.
+
 
 
 ## Offical Reference
